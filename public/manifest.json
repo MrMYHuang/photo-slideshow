@@ -9,7 +9,8 @@
       "purpose": "any"
     }
   ],
-  "start_url": ".",
+  "scope": "/photo-slideshow/",
+  "start_url": "/photo-slideshow/",
   "display": "standalone",
   "theme_color": "#ffffff",
   "background_color": "#ffffff"
