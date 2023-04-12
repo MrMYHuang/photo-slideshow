@@ -1,0 +1,14 @@
+* {
+  font-size: 32px;
+}
+
+img {
+  display: block;
+  width:100%; 
+  height:100%;
+  object-fit: contain;
+}
+
+ion-input.custom {
+  border: 1px var(--ion-color-primary) solid;
+}
