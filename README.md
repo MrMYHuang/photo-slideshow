@@ -45,22 +45,22 @@ https://myhpwa.github.io/photo-slideshow
 #### Windows, macOS, Linux, Android - 使用 Chrome 安裝
 使用 Chrome 瀏覧器（建議最新版）開啟上述 PWA 網址後，網址列會出現一圖示：
 
-<img src='https://github.com/MrMYHuang/photo-slideshow/raw/main/docs/images/ChromeInstall.png' width='50%' />
+<img src='https://raw.githubusercontent.com/MrMYHuang/photo-slideshow/main/docs/images/ChromeInstall.png' width='50%' />
 
 點擊它，以完成安裝。安裝完後會在桌面出現 "佛學大辭典" app 圖示。
 
 #### iOS - 使用 Safari安裝
 1. 使用 Safari 開啟 web app 網址，再點擊下方中間的 "分享" 圖示：
 
-<img src='https://github.com/MrMYHuang/photo-slideshow/raw/main/docs/images/Safari/OpenAppUrl.png' width='50%' />
+<img src='https://raw.githubusercontent.com/MrMYHuang/photo-slideshow/main/docs/images/Safari/OpenAppUrl.png' width='50%' />
 
 2. 滑動頁面至下方，點選 "加入主畫面" (Add to Home Screen)：
 
-<img src='https://github.com/MrMYHuang/photo-slideshow/raw/main/docs/images/Safari/AddToHomeScreen.png' width='50%' />
+<img src='https://raw.githubusercontent.com/MrMYHuang/photo-slideshow/raw/main/docs/images/Safari/AddToHomeScreen.png' width='50%' />
 
 3. App 安裝完，出現在主畫面的圖示：
 
-<img src='https://github.com/MrMYHuang/photo-slideshow/raw/main/docs/images/Safari/AppIcon.png' width='50%' />
+<img src='https://raw.githubusercontent.com/MrMYHuang/photo-slideshow/raw/main/docs/images/Safari/AppIcon.png' width='50%' />
 
 ## <a id='history'>版本歷史</a>
 * PWA 1.2.1:
