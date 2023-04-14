@@ -2,7 +2,7 @@
 
 import { useState, useEffect, ChangeEvent, useRef } from "react";
 import AudioPlayerOrig from "react-audio-player";
-import { IonAlert, IonApp, IonButton, IonInput, IonItem, IonLabel, IonList, IonPage, IonToggle, setupIonicReact } from '@ionic/react';
+import { IonAlert, IonApp, IonButton, IonContent, IonInput, IonItem, IonLabel, IonList, IonPage, IonToggle, isPlatform, setupIonicReact } from '@ionic/react';
 
 const AudioPlayer = process.env.NODE_ENV === 'production' ? (AudioPlayerOrig as any).default : AudioPlayerOrig;
 
@@ -23,9 +23,9 @@ import PackageInfos from '../package.json';
 
 const photoSwitchTimeDefault = 5000;
 const photoFormats = ['jpg', 'jpeg', 'svg', 'png', 'bmp', 'gif'];
-const photoRegExp = new RegExp(`\.(${photoFormats.join('|')})$`, 'i');
+const photoRegExp = new RegExp(`^[^.].*\.(${photoFormats.join('|')})$`, 'i');
 const musicFormats = ['mp3', 'm4a', 'wav', 'ogg'];
-const musicRegExp = new RegExp(`\.(${musicFormats.join('|')})$`, 'i');
+const musicRegExp = new RegExp(`^[^.].*\.(${musicFormats.join('|')})$`, 'i');
 
 setupIonicReact({
   mode: 'md',
@@ -37,44 +37,28 @@ export var serviceWorkCallbacks = {
   onUpdate: function (registration: ServiceWorkerRegistration) { },
 };
 
-// Define a component for displaying a music player
-function MusicPlayer(props: { source: string, nextMusic: Function, setToggleAudioPlayer: Function }) {
-  // Use state hooks to store the playback status
-  const [status, setStatus] = useState("loading");
+const sortFileByName = (f0: File, f1: File) => f0.name.localeCompare(f1.name);
+const sortFileByTime = (f0: File, f1: File) => f0.lastModified - f1.lastModified;
 
+// Define a component for displaying a music player
+function MusicPlayer(props: { source: string, nextMusic: Function }) {
   // Define a function to handle the audio load event
   const handleLoad = () => {
-    setStatus("playing");
+    console.log("load");
   };
 
   // Define a function to handle the audio play event
   const handlePlay = () => {
-    setStatus("playing");
+    console.log("playing");
   };
-
-  props.setToggleAudioPlayer(() => {
-    const audioEl = document.getElementsByTagName('audio')[0];
-    if (!audioEl) {
-      console.error('audioEl is null');
-      return false;
-    }
-
-    if (audioEl.paused) {
-      audioEl.play();
-      handlePlay();
-    } else {
-      audioEl.pause();
-      handlePause();
-    }
-    return true;
-  });
 
   // Define a function to handle the audio pause event
   const handlePause = () => {
-    setStatus("paused");
+    console.log("paused");
   };
 
   const handleEnded = () => {
+    console.log("ended");
     props.nextMusic();
   };
 
@@ -86,7 +70,7 @@ function MusicPlayer(props: { source: string, nextMusic: Function, setToggleAudi
       onPlay={handlePlay}
       onPause={handlePause}
       onEnded={handleEnded}
-      autoPlay={true}
+      crossOrigin="anonymous"
     />
   );
 };
@@ -109,6 +93,7 @@ function App() {
   const [currentMusic, setCurrentMusic] = useState('');
   const [currentMusicId, setCurrentMusicId] = useState(0);
 
+  const [sortType, setSortType] = useState(false);
   const photoSwitchTimeInputEl = useRef<HTMLIonInputElement>(null);
   const [photoSwitchTime, setPhotoSwitchTime] = useState(photoSwitchTimeDefault);
   const [repeatPlay, setRepeatPlay] = useState(false);
@@ -126,7 +111,9 @@ function App() {
 
     serviceWorkCallbacks.onSuccess = (registration: ServiceWorkerRegistration) => {
     };
+  });
 
+  useEffect(() => {
     const interval = setInterval(() => {
       if (status != Status.Playing) { return; }
 
@@ -142,7 +129,6 @@ function App() {
       clearInterval(interval);
     };
   }, [repeatPlay, photoSwitchTime, currentPhotoId, currentPhoto, status]);
-
 
   useEffect(() => {
     if (photos.length === 0) { return; }
@@ -167,7 +153,7 @@ function App() {
     }
 
     if (musics.length == 1) {
-      toggleAudioPlayer();
+      play();
     } else {
       setCurrentMusicId((prev) => (prev + 1) % musics.length);
     }
@@ -186,7 +172,7 @@ function App() {
       // Filter out the photos and music by their file type
       const photos = entries.filter(
         (entry) => photoRegExp.test(entry.name)
-      );
+      ).sort(sortType ? sortFileByTime : sortFileByName);
 
       if (photos.length == 0) {
         throw new Error('No image found!');
@@ -194,10 +180,10 @@ function App() {
 
       const musics = entries.filter(
         (entry) => musicRegExp.test(entry.name)
-      );
+      ).sort(sortType ? sortFileByTime : sortFileByName);
 
-      setPhotos(() => photos);
-      setMusics(() => musics);
+      setPhotos(photos);
+      setMusics(musics);
 
       if (photos.length > 0) {
         setCurrentPhotoId(0);
@@ -207,116 +193,143 @@ function App() {
         setCurrentMusicId(0);
       }
 
-      play();
+      setStatus(Status.Pause);
     } catch (error: any) {
       // Handle any errors that may occur while accessing the folder or its contents
       alert(error.message);
     }
   };
 
-  let toggleAudioPlayer = () => {
-    return false;
+  const play = () => {
+    const audioEl = document.getElementsByTagName('audio')[0];
+    if (audioEl.paused) {
+      try {
+        audioEl.play();
+      } catch (error) {
+        console.error(error);
+      }
+      audioEl.autoplay = true;
+    }
+
+    setStatus(Status.Playing);
+
+    if (!isPlatform('ios')) {
+      try {
+        document.documentElement.requestFullscreen();
+      } catch (error) {
+        console.error(error);
+      }
+    }
   };
 
-  const play = () => {
-    setStatus(Status.Playing);
+  const pause = () => {
+    pauseAudioAndExitFullScreen();
+
+    setStatus(Status.Pause);
+  };
+
+  const pauseAudioAndExitFullScreen = () => {
+    const audioEl = document.getElementsByTagName('audio')[0];
     try {
-      document.documentElement.requestFullscreen();
+      audioEl.pause();
     } catch (error) {
       console.error(error);
     }
-  };
+    audioEl.autoplay = false;
 
-  const stop = () => {
-    setStatus(Status.Stop);
-    const el = document.getElementById('getFolder')! as HTMLInputElement;
-    el.value = '';
-    document.exitFullscreen();
-  };
-
-  const togglePlay = () => {
-    toggleAudioPlayer();
-
-    if (status !== Status.Playing) {
-      play();
-    } else {
-      setStatus(Status.Pause);
+    if (!isPlatform('ios')) {
       document.exitFullscreen();
     }
+  }
+
+  const stop = () => {
+    const el = document.getElementById('getFolder')! as HTMLInputElement;
+    el.value = '';
+
+    pauseAudioAndExitFullScreen();
+
+    setStatus(Status.Stop);
   };
 
   // Return the JSX for rendering the app
   return (
     <IonApp>
       <IonPage>
-        <div hidden={status == Status.Playing}>
-          <IonList lines="full">
-            <IonItem>
-              <IonLabel className='ion-text-wrap'>請選擇本機目錄，其中包含相片或音樂。</IonLabel>
-            </IonItem>
-            <IonItem>
-              <IonLabel className='ion-text-wrap'>支援相片格式：{photoFormats.join(', ')}</IonLabel>
-            </IonItem>
-            <IonItem>
-              <IonLabel className='ion-text-wrap'>支援音樂格式：{musicFormats.join(', ')}</IonLabel>
-            </IonItem>
-            <IonItem>
-              <IonInput
-                label="相片切換間格(毫秒)："
-                labelPlacement="stacked"
-                ref={photoSwitchTimeInputEl}
-                value={photoSwitchTime}
-                onIonChange={(ev) => {
-                  const time = +(ev.target.value || photoSwitchTimeDefault);
+        <IonContent>
+          <div hidden={status == Status.Playing}>
+            <IonList lines="full">
+              <IonItem>
+                <IonLabel className='ion-text-wrap'>請選擇本機目錄，其中包含相片或音樂，再按播放鈕。</IonLabel>
+              </IonItem>
+              <IonItem>
+                <IonToggle checked={sortType} onIonChange={(ev) => {
+                  setSortType(ev.target.checked);
+                }}>排序（檔名/日期）</IonToggle>
+              </IonItem>
+              <IonItem>
+                <IonInput
+                  label="相片切換間格(毫秒)："
+                  labelPlacement="stacked"
+                  ref={photoSwitchTimeInputEl}
+                  value={photoSwitchTime}
+                  onIonChange={(ev) => {
+                    const time = +(ev.target.value || photoSwitchTimeDefault);
 
-                  if (time < 1) {
-                    alert('不可小於 1!');
-                    setPhotoSwitchTime(photoSwitchTimeDefault);
-                    photoSwitchTimeInputEl.current!.value = photoSwitchTimeDefault;
-                  } else {
-                    setPhotoSwitchTime(time);
-                  }
-                }}></IonInput>
-            </IonItem>
-            <IonItem>
-              <IonToggle checked={repeatPlay} onIonChange={(ev) => {
-                setRepeatPlay(ev.target.checked);
-              }}>循環播放</IonToggle>
-            </IonItem>
-            <IonItem>
-              <IonLabel className='ion-text-wrap'>投影播放時，可點擊圖片暫停，並可重新選擇目錄。</IonLabel>
-            </IonItem>
+                    if (time < 1) {
+                      alert('不可小於 1!');
+                      setPhotoSwitchTime(photoSwitchTimeDefault);
+                      photoSwitchTimeInputEl.current!.value = photoSwitchTimeDefault;
+                    } else {
+                      setPhotoSwitchTime(time);
+                    }
+                  }}></IonInput>
+              </IonItem>
+              <IonItem>
+                <IonToggle checked={repeatPlay} onIonChange={(ev) => {
+                  setRepeatPlay(ev.target.checked);
+                }}>循環播放</IonToggle>
+              </IonItem>
+              <IonItem>
+                <IonLabel className='ion-text-wrap'>投影播放時，可點擊圖片暫停，並可重新選擇目錄。</IonLabel>
+              </IonItem>
 
-            <IonItem>
-              <input id='getFolder'
-                hidden={true}
-                placeholder='Flder of photos and music' type='file'
-                /* @ts-expect-error */
-                webkitdirectory="true"
-                directory="true"
-                onChange={handleChange} />
-              <IonButton slot="start" size="large" onClick={() => {
-                document.getElementById('getFolder')?.click();
-              }}>選擇目錄</IonButton>
-              {status !== Status.Stop && <IonButton slot="end" size="large" onClick={() => {
-                togglePlay();
-              }}>繼續</IonButton>}
-            </IonItem>
+              <IonItem>
+                <input id='getFolder'
+                  hidden={true}
+                  placeholder='Folder of photos and music' type='file'
+                  /* @ts-expect-error */
+                  webkitdirectory="true"
+                  directory="true"
+                  multiple={true}
+                  onChange={handleChange} />
+                <IonButton slot="start" size="large" onClick={() => {
+                  document.getElementById('getFolder')?.click();
+                }}>選擇目錄</IonButton>
+                {status !== Status.Stop && <IonButton slot="end" size="large" onClick={() => {
+                  play();
+                }}>播放</IonButton>}
+              </IonItem>
 
-            <IonItem>
-              <div className='uiFont'>
-                <div hidden={Globals.isMacCatalyst()}>版本：{PackageInfos.pwaVersion}</div>
-                <div><a href="https://github.com/MrMYHuang/photo-slideshow" target="_new">原始碼</a></div>
-              </div>
-            </IonItem>
-          </IonList>
-        </div>
+              <IonItem>
+                <IonLabel className='ion-text-wrap'>支援相片格式：{photoFormats.join(', ')}</IonLabel>
+              </IonItem>
+              <IonItem>
+                <IonLabel className='ion-text-wrap'>支援音樂格式：{musicFormats.join(', ')}</IonLabel>
+              </IonItem>
 
-        {photos.length > 0 && status == Status.Playing &&
-          <img src={currentPhoto} alt='img can not be shown' onClick={togglePlay} />}
-        <MusicPlayer source={currentMusic} nextMusic={nextMusic} setToggleAudioPlayer={(subCompCall: () => boolean) => {
-          toggleAudioPlayer = subCompCall;
-        }} />
+              <IonItem>
+                <div className='uiFont'>
+                  <div hidden={Globals.isMacCatalyst()}>版本：{PackageInfos.pwaVersion}</div>
+                  <div><a href="https://github.com/MrMYHuang/photo-slideshow" target="_new">原始碼</a></div>
+                </div>
+              </IonItem>
+            </IonList>
+          </div>
+
+          {photos.length > 0 && status == Status.Playing &&
+            <img src={currentPhoto} alt='img can not be shown' onClick={pause} />}
+          <MusicPlayer source={currentMusic} nextMusic={nextMusic} />
+        </IonContent>
 
         <IonAlert
           cssClass='uiFont'
