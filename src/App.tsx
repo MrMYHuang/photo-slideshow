@@ -70,7 +70,6 @@ function MusicPlayer(props: { source: string, nextMusic: Function }) {
       onPlay={handlePlay}
       onPause={handlePause}
       onEnded={handleEnded}
-      crossOrigin="anonymous"
     />
   );
 };
