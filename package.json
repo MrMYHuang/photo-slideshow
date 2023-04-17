@@ -2,7 +2,7 @@
   "name": "photo-slideshow",
   "private": true,
   "version": "1.0.0",
-  "pwaVersion": "1.2.1",
+  "pwaVersion": "1.2.2",
   "type": "module",
   "scripts": {
     "dev": "vite --host",

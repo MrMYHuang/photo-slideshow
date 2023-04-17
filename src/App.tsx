@@ -162,7 +162,6 @@ function App() {
   const handleChange = async (event: ChangeEvent<HTMLInputElement>) => {
     try {
       const fileList = event.target.files!;
-      // Get all the entries in the folder using FileSystemDirectoryHandle.values()
       const entries: File[] = [];
       for (const entry of fileList) {
         entries.push(entry);
@@ -295,10 +294,11 @@ function App() {
               <IonItem>
                 <input id='getFolder'
                   hidden={true}
-                  placeholder='Folder of photos and music' type='file'
+                  type='file'
+                  placeholder='Folder of photos and music'
                   /* @ts-expect-error */
-                  webkitdirectory="true"
-                  directory="true"
+                  webkitdirectory={isPlatform('android') ? null : 'true' }
+                  directory={isPlatform('android') ? null : 'true' }
                   multiple={true}
                   onChange={handleChange} />
                 <IonButton slot="start" size="large" onClick={() => {

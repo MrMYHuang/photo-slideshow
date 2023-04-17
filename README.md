@@ -16,6 +16,7 @@
 已在這些環境作過安裝、測試:
 * Windows 11 + Chrome
 * macOS 13 + Chrome
+* Android 13 + Chrome
 * iPad 10 + Safari
 * Ubuntu Linux 22 + Chromium
 
@@ -47,7 +48,7 @@ https://myhpwa.github.io/photo-slideshow
 
 <img src='https://raw.githubusercontent.com/MrMYHuang/photo-slideshow/main/docs/images/ChromeInstall.png' width='50%' />
 
-點擊它，以完成安裝。安裝完後會在桌面出現 "佛學大辭典" app 圖示。
+點擊它，以完成安裝。安裝完後會在桌面出現 "照片投影" app 圖示。
 
 #### iOS - 使用 Safari安裝
 1. 使用 Safari 開啟 web app 網址，再點擊下方中間的 "分享" 圖示：
@@ -63,6 +64,9 @@ https://myhpwa.github.io/photo-slideshow
 <img src='https://raw.githubusercontent.com/MrMYHuang/photo-slideshow/raw/main/docs/images/Safari/AppIcon.png' width='50%' />
 
 ## <a id='history'>版本歷史</a>
+* PWA 1.2.2:
+  * [修正] Android 無法選擇多個檔案的問題。
+
 * PWA 1.2.1:
   * [新增] 檔名/日期排序開關。
   * [修正] 未濾掉隱藏檔的問題。
